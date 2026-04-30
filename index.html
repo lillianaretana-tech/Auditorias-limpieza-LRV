@@ -514,9 +514,12 @@
   <div class="logo">
     📋 AuditPro <span id="hdr-building">— Nueva Auditoría</span>
   </div>
-  <div class="header-meta">
-    <div><strong id="hdr-date">—</strong></div>
-    <div id="hdr-progress">0 de 0 áreas revisadas</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button id="btn-back-setup" onclick="backToSetup()" style="display:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:6px 14px;border-radius:7px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">← Menú</button>
+    <div class="header-meta">
+      <div><strong id="hdr-date">—</strong></div>
+      <div id="hdr-progress">0 de 0 áreas revisadas</div>
+    </div>
   </div>
 </header>
 
@@ -895,6 +898,7 @@ function startAudit() {
   document.getElementById('screen-setup').style.display = 'none';
   document.getElementById('screen-audit').style.display = 'block';
   document.getElementById('sidebar').classList.add('visible');
+  document.getElementById('btn-back-setup').style.display = '';
 
   renderSidebar();
   renderArea();
@@ -1349,6 +1353,7 @@ function restoreAudit(idx) {
     document.getElementById('screen-setup').style.display = 'none';
     document.getElementById('screen-audit').style.display = 'block';
     document.getElementById('sidebar').classList.add('visible');
+    document.getElementById('btn-back-setup').style.display = '';
     state.currentAreaIdx = 0;
     renderSidebar();
     renderArea();
@@ -1364,6 +1369,29 @@ function deleteHistory(idx) {
     loadHistory();
     showToast('🗑️ Eliminado');
   } catch(e) {}
+}
+
+function backToSetup() {
+  if (!confirm('¿Volver al menú? Podrás cambiar las áreas seleccionadas.\nLo que ya calificaste quedará guardado en el historial.')) return;
+  autoSave();
+  // Restore setup fields from current state
+  document.getElementById('inp-building').value = state.building || '';
+  document.getElementById('inp-floor').value = state.floor || '';
+  document.getElementById('inp-auditor').value = state.auditor || '';
+  document.getElementById('inp-date').value = state.date || '';
+  document.getElementById('inp-type').value = state.type || 'Rutinaria';
+  // Restore area selections
+  document.querySelectorAll('.area-check').forEach(el => {
+    const isSelected = state.selectedAreas && state.selectedAreas.includes(el.dataset.id);
+    el.classList.toggle('selected', isSelected);
+    el.querySelector('.chk').textContent = isSelected ? '✓' : '';
+  });
+  document.getElementById('screen-audit').style.display = 'none';
+  document.getElementById('screen-summary').style.display = 'none';
+  document.getElementById('screen-setup').style.display = 'block';
+  document.getElementById('sidebar').classList.remove('visible');
+  document.getElementById('btn-back-setup').style.display = 'none';
+  document.getElementById('hdr-building').textContent = '— Nueva Auditoría';
 }
 
 function newAudit() {
