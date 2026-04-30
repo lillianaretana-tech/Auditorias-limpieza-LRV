@@ -977,7 +977,7 @@ function renderArea() {
       <div class="subarea-top" style="cursor:default">
         <span style="font-size:18px">⭐</span>
         <span class="subarea-title" style="font-family:'Syne',sans-serif;font-weight:700">Nota Global del Área</span>
-        ${areaData.score > 0 ? `<span class="sidebar-score-pill pill-${areaData.score}" style="font-size:14px;padding:4px 12px">${areaData.score}</span>` : ''}
+        <span id="area-score-pill" class="sidebar-score-pill pill-${areaData.score}" style="font-size:14px;padding:4px 12px;${areaData.score > 0 ? '' : 'display:none'}">${areaData.score || ''}</span>
       </div>
       <div class="subarea-body">
         <div class="score-label">CALIFICACIÓN</div>
@@ -997,7 +997,7 @@ function renderArea() {
         <div class="subarea-top">
           <span style="font-size:15px">📌</span>
           <span class="subarea-title">${sub.name}</span>
-          ${subData.score > 0 ? `<span class="sidebar-score-pill pill-${subData.score}">${subData.score}</span>` : `<span style="color:var(--muted);font-size:11px">Sin calificar</span>`}
+          <span id="sub-pill-${sub.id}" class="sidebar-score-pill ${subData.score > 0 ? 'pill-'+subData.score : 'pill-0'}" style="${subData.score === 0 ? 'color:var(--muted);font-size:11px' : ''}">${subData.score > 0 ? subData.score : 'Sin calificar'}</span>
           <span style="color:var(--muted);font-size:18px;margin-left:4px">›</span>
         </div>
         <div class="subarea-body" id="body-${sub.id}" style="display:none">
@@ -1051,7 +1051,8 @@ function renderArea() {
 
 function renderScoreBtns(type, targetId, current, parentId) {
   const labels = ['', 'Pésimo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
-  return `<div class="score-btns">${[1,2,3,4,5].map(v => `
+  const containerId = type === 'area' ? 'area-score-btns' : `score-btns-${targetId}`;
+  return `<div class="score-btns" id="${containerId}">${[1,2,3,4,5].map(v => `
     <div class="score-btn ${current === v ? 'active' : ''}" data-v="${v}"
       onclick="setScore('${type}','${targetId}',${v},'${parentId||''}')">
       <div class="snum">${v}</div>
@@ -1059,13 +1060,40 @@ function renderScoreBtns(type, targetId, current, parentId) {
     </div>`).join('')}</div>`;
 }
 
+function calcAreaAvg(areaId) {
+  const subScores = Object.values(state.areas[areaId].subareas)
+    .map(s => s.score).filter(s => s > 0);
+  if (!subScores.length) return 0;
+  return Math.round(subScores.reduce((a,b) => a+b, 0) / subScores.length);
+}
+
 function setScore(type, targetId, val, parentId) {
   if (type === 'area') {
     state.areas[targetId].score = val;
+    // Update area score pill in header card
+    const pill = document.getElementById('area-score-pill');
+    if (pill) { pill.className = `sidebar-score-pill pill-${val}`; pill.style.fontSize='14px'; pill.style.padding='4px 12px'; pill.textContent = val; }
+    // Update all score buttons in area card
+    document.querySelectorAll(`#area-score-btns .score-btn`).forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.v) === val);
+    });
   } else {
     state.areas[parentId].subareas[targetId].score = val;
+    // Update subarea pill
+    const pill = document.getElementById('sub-pill-' + targetId);
+    if (pill) { pill.className = `sidebar-score-pill pill-${val}`; pill.textContent = val; }
+    // Update score buttons in this subarea
+    document.querySelectorAll(`#score-btns-${targetId} .score-btn`).forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.v) === val);
+    });
+    // Auto-update area score from subarea average
+    const avg = calcAreaAvg(parentId);
+    state.areas[parentId].score = avg;
+    const areaPill = document.getElementById('area-score-pill');
+    if (areaPill && avg > 0) { areaPill.className = `sidebar-score-pill pill-${avg}`; areaPill.style.fontSize='14px'; areaPill.style.padding='4px 12px'; areaPill.textContent = avg; }
+    const areaBtns = document.querySelectorAll(`#area-score-btns .score-btn`);
+    areaBtns.forEach(btn => btn.classList.toggle('active', parseInt(btn.dataset.v) === avg));
   }
-  renderArea();
   renderSidebar();
   autoSave();
 }
@@ -1123,7 +1151,10 @@ function showSummary() {
     `📍 ${state.building} ${state.floor ? '· ' + state.floor : ''} &nbsp;|&nbsp; 📅 ${formatDate(state.date)} &nbsp;|&nbsp; 👤 ${state.auditor} &nbsp;|&nbsp; 📋 ${state.type}`;
 
   // Scores
-  const scores = state.selectedAreas.map(id => state.areas[id].score).filter(s => s > 0);
+  const scores = state.selectedAreas.map(id => {
+    const sc = state.areas[id].score;
+    return sc > 0 ? sc : calcAreaAvg(id);
+  }).filter(s => s > 0);
   const avg = scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : '—';
   const avgNum = parseFloat(avg);
 
@@ -1212,7 +1243,10 @@ function exportText() {
   lines.push(`Tipo: ${state.type}`);
   lines.push('');
 
-  const scores = state.selectedAreas.map(id => state.areas[id].score).filter(s => s > 0);
+  const scores = state.selectedAreas.map(id => {
+    const sc = state.areas[id].score;
+    return sc > 0 ? sc : calcAreaAvg(id);
+  }).filter(s => s > 0);
   const avg = scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : '—';
   lines.push(`NOTA PROMEDIO: ${avg} / 5`);
   lines.push('');
