@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoría de Limpieza & Mantenimiento</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0f1117;
+    --surface: #171b25;
+    --surface2: #1e2334;
+    --border: #2a3045;
+    --accent: #f4a72a;
+    --accent2: #3b82f6;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --text: #e8eaf0;
+    --muted: #7a8299;
+    --score-1: #ef4444;
+    --score-2: #f97316;
+    --score-3: #eab308;
+    --score-4: #84cc16;
+    --score-5: #22c55e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.3px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo span { color: var(--text); font-weight: 400; font-size: 13px; }
+  .header-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+  .header-meta strong { color: var(--accent); }
+
+  /* ── MAIN LAYOUT ── */
+  .app { display: flex; min-height: calc(100vh - 57px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 230px;
+    min-width: 230px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    position: sticky;
+    top: 57px;
+    height: calc(100vh - 57px);
+    overflow-y: auto;
+    display: none;
+  }
+  .sidebar.visible { display: block; }
+  .sidebar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 0 16px 8px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+  .sidebar-item:hover { background: var(--surface2); }
+  .sidebar-item.active { border-left-color: var(--accent); background: var(--surface2); color: var(--accent); font-weight: 500; }
+  .sidebar-item.done { border-left-color: var(--success); }
+  .sidebar-item .area-icon { font-size: 15px; }
+  .sidebar-score-pill {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 10px;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  /* ── CONTENT ── */
+  .content { flex: 1; padding: 24px 28px; max-width: 900px; }
+
+  /* ── SETUP SCREEN ── */
+  #screen-setup { max-width: 560px; margin: 40px auto; }
+  .setup-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    line-height: 1.1;
+  }
+  .setup-title span { color: var(--accent); }
+  .setup-sub { color: var(--muted); margin-bottom: 32px; font-size: 13px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { 
+    display: block; 
+    font-family: 'DM Mono', monospace; 
+    font-size: 10px; 
+    color: var(--muted); 
+    letter-spacing: 1px; 
+    text-transform: uppercase; 
+    margin-bottom: 7px; 
+  }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  select.form-input option { background: var(--surface2); }
+
+  .areas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .area-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .area-check:hover { border-color: var(--accent); }
+  .area-check.selected { border-color: var(--accent); background: rgba(244,167,42,0.08); }
+  .area-check input { display: none; }
+  .area-check .chk { 
+    width: 16px; height: 16px; 
+    border: 2px solid var(--border); 
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .area-check.selected .chk { background: var(--accent); border-color: var(--accent); color: #000; }
+  .area-check .ach-name { font-size: 12px; }
+  .area-check .ach-icon { font-size: 16px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { background: #f5b94a; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-success { background: var(--success); color: #000; }
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+  .btn-xs { padding: 5px 10px; font-size: 11px; }
+  .btn-full { width: 100%; justify-content: center; }
+
+  /* ── AREA AUDIT SCREEN ── */
+  #screen-audit { display: none; }
+  .area-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .area-icon-big {
+    width: 54px; height: 54px;
+    background: var(--surface2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  .area-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .area-subname { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .area-nav-btns { margin-left: auto; display: flex; gap: 8px; }
+
+  /* ── SUBAREAS ── */
+  .subarea-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .subarea-card:hover { border-color: var(--border); }
+  .subarea-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .subarea-title { font-weight: 500; font-size: 14px; flex: 1; }
+  .subarea-body { padding: 0 16px 16px; border-top: 1px solid var(--border); }
+
+  /* ── SCORE WIDGET ── */
+  .score-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-top: 14px;
+  }
+  .score-btns { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .score-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 62px;
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Syne', sans-serif;
+  }
+  .score-btn:hover { transform: translateY(-2px); }
+  .score-btn .snum { font-size: 20px; font-weight: 800; }
+  .score-btn .slabel { font-size: 8px; color: var(--muted); text-align: center; letter-spacing: 0.3px; line-height: 1.2; }
+  .score-btn[data-v="1"] .snum { color: var(--score-1); }
+  .score-btn[data-v="2"] .snum { color: var(--score-2); }
+  .score-btn[data-v="3"] .snum { color: var(--score-3); }
+  .score-btn[data-v="4"] .snum { color: var(--score-4); }
+  .score-btn[data-v="5"] .snum { color: var(--score-5); }
+  .score-btn.active[data-v="1"] { border-color: var(--score-1); background: rgba(239,68,68,0.12); }
+  .score-btn.active[data-v="2"] { border-color: var(--score-2); background: rgba(249,115,22,0.12); }
+  .score-btn.active[data-v="3"] { border-color: var(--score-3); background: rgba(234,179,8,0.12); }
+  .score-btn.active[data-v="4"] { border-color: var(--score-4); background: rgba(132,204,22,0.12); }
+  .score-btn.active[data-v="5"] { border-color: var(--score-5); background: rgba(34,197,94,0.12); }
+
+  /* ── COMMENT & TASKS ── */
+  textarea.form-input { resize: vertical; min-height: 72px; }
+  .tasks-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .task-list { display: flex; flex-direction: column; gap: 6px; }
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .task-item.urgent { border-left: 3px solid var(--danger); }
+  .task-item.normal { border-left: 3px solid var(--accent2); }
+  .task-text { flex: 1; font-size: 13px; line-height: 1.4; }
+  .task-priority {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .task-priority.urgente { background: rgba(239,68,68,0.2); color: var(--score-1); }
+  .task-priority.normal { background: rgba(59,130,246,0.2); color: var(--accent2); }
+  .btn-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; padding: 2px; }
+  .btn-del:hover { color: var(--danger); }
+
+  .task-add-row { display: flex; gap: 8px; margin-top: 8px; }
+  .task-add-row .form-input { flex: 1; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .progress-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── SCORE PILL ── */
+  .pill-1 { background: rgba(239,68,68,0.2); color: var(--score-1); }
+  .pill-2 { background: rgba(249,115,22,0.2); color: var(--score-2); }
+  .pill-3 { background: rgba(234,179,8,0.2); color: var(--score-3); }
+  .pill-4 { background: rgba(132,204,22,0.2); color: var(--score-4); }
+  .pill-5 { background: rgba(34,197,94,0.2); color: var(--score-5); }
+  .pill-0 { background: var(--surface2); color: var(--muted); }
+
+  /* ── SUMMARY SCREEN ── */
+  #screen-summary { display: none; }
+  .summary-header {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .summary-meta {
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 28px;
+  }
+  .score-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .score-card .sc-icon { font-size: 24px; margin-bottom: 6px; }
+  .score-card .sc-name { font-size: 11px; color: var(--muted); margin-bottom: 8px; line-height: 1.3; }
+  .score-card .sc-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+  }
+  .score-card .sc-label { font-size: 10px; color: var(--muted); }
+
+  .overall-score {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  .os-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 64px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .os-info .os-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .os-info .os-sub { color: var(--muted); font-size: 12px; }
+
+  .tasks-summary-section { margin-bottom: 28px; }
+  .tasks-summary-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-group { margin-bottom: 16px; }
+  .task-group-name {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .export-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    header, .sidebar, .area-nav-btns, .export-row, .btn { display: none !important; }
+    body { background: white; color: black; }
+    .content { padding: 10px; }
+    .surface, .surface2 { background: #f5f5f5 !important; }
+    .score-card, .overall-score, .task-item { border: 1px solid #ccc !important; }
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--success);
+    color: #000;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── NAV PILLS ── */
+  .nav-pills {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .nav-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+  }
+  .nav-pill.active-pill { border-color: var(--accent); color: var(--accent); background: rgba(244,167,42,0.1); }
+  .nav-pill.done-pill { border-color: var(--success); color: var(--success); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .empty-state .ei { font-size: 36px; margin-bottom: 10px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .content { padding: 16px; }
+    .areas-grid { grid-template-columns: 1fr; }
+    .score-btns { gap: 5px; }
+    .score-btn { width: 54px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    📋 AuditPro <span id="hdr-building">— Nueva Auditoría</span>
+  </div>
+  <div class="header-meta">
+    <div><strong id="hdr-date">—</strong></div>
+    <div id="hdr-progress">0 de 0 áreas revisadas</div>
+  </div>
+</header>
+
+<div class="app">
+  <nav class="sidebar" id="sidebar"></nav>
+
+  <main class="content" id="main-content">
+
+    <!-- ══════════════════════════════════════ SETUP SCREEN ══ -->
+    <div id="screen-setup">
+      <div class="setup-title">Nueva <span>Auditoría</span></div>
+      <div class="setup-sub">Configura la visita antes de empezar a registrar.</div>
+
+      <div class="form-group">
+        <label class="form-label">📍 Edificio / Cuenta</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="form-input" id="inp-building" placeholder="Ej. Bayer Metro – Edificio A" list="building-list" style="flex:1">
+          <datalist id="building-list"></datalist>
+          <button class="btn btn-outline btn-sm" onclick="toggleProjectManager()" title="Gestionar proyectos" style="white-space:nowrap;flex-shrink:0">⚙️ Proyectos</button>
+        </div>
+        <div id="project-manager" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Gestionar Proyectos / Cuentas</div>
+          <div id="project-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" id="new-project-inp" placeholder="Nombre del nuevo proyecto..." onkeypress="if(event.key==='Enter')addProject()">
+            <button class="btn btn-primary btn-sm" onclick="addProject()">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🏢 Piso / Nivel</label>
+        <input class="form-input" id="inp-floor" placeholder="Ej. Piso 3, Sótano, Todos los pisos">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">👤 Auditor</label>
+        <input class="form-input" id="inp-auditor" placeholder="Tu nombre" value="Lilliana">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">📅 Fecha</label>
+        <input class="form-input" id="inp-date" type="date">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🗂️ Tipo de auditoría</label>
+        <select class="form-input" id="inp-type">
+          <option value="Rutinaria">Rutinaria</option>
+          <option value="Sorpresa">Sorpresa / Sin previo aviso</option>
+          <option value="Cliente">Visita de cliente</option>
+          <option value="Seguimiento">Seguimiento de hallazgos</option>
+          <option value="Especial">Especial</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">🏗️ Áreas a revisar en esta visita</label>
+        <div class="areas-grid" id="areas-selector"></div>
+      </div>
+
+      <div style="margin-top: 28px;">
+        <button class="btn btn-primary btn-full" onclick="startAudit()">
+          🚀 Comenzar Auditoría
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ AUDIT SCREEN ══ -->
+    <div id="screen-audit">
+      <div class="area-header" id="area-header"></div>
+
+      <div class="nav-pills" id="nav-pills-top"></div>
+
+      <div id="area-content"></div>
+
+      <div style="display:flex; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+        <button class="btn btn-outline" id="btn-prev" onclick="navigate(-1)">← Anterior</button>
+        <button class="btn btn-primary" id="btn-next" onclick="navigate(1)">Siguiente →</button>
+        <button class="btn btn-success" id="btn-finish" style="display:none" onclick="showSummary()">✔ Ver Resumen</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ SUMMARY SCREEN ══ -->
+    <div id="screen-summary">
+      <div class="summary-header">Resumen de Auditoría</div>
+      <div class="summary-meta" id="summary-meta"></div>
+
+      <div class="overall-score" id="overall-score-box"></div>
+
+      <div class="score-card-grid" id="score-cards"></div>
+
+      <div class="tasks-summary-section" id="tasks-summary"></div>
+
+      <div class="export-row">
+        <button class="btn btn-primary" onclick="exportText()">📋 Copiar Informe</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimir</button>
+        <button class="btn btn-outline" onclick="newAudit()">➕ Nueva Auditoría</button>
+        <button class="btn btn-outline" onclick="loadHistory()">📂 Historial</button>
+      </div>
+
+      <!-- HISTORIAL -->
+      <div id="history-section" style="display:none; margin-top:28px;">
+        <div class="tasks-summary-title">📂 Auditorías Guardadas</div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  AREA DEFINITIONS
+// ════════════════════════════════════════════════════
+const AREA_DEFS = [
+  {
+    id: 'lobby', icon: '🏛️', name: 'Lobby / Recepción', short: 'Lobby',
+    subareas: [
+      { id: 'floor_lobby', name: 'Piso y alfombras', checks: ['Sin manchas','Sin polvo ni suciedad','Brillo en pisos duros','Sin pelos ni residuos'] },
+      { id: 'glass_lobby', name: 'Vidrios / Espejos', checks: ['Sin huellas','Sin rayas','Sin polvo en marcos'] },
+      { id: 'furniture_lobby', name: 'Mobiliario y recepción', checks: ['Sin polvo','Sin manchas','Ordenado'] },
+      { id: 'walls_lobby', name: 'Paredes y esquinas', checks: ['Sin suciedad en zócalos','Sin telarañas','Sin marcas'] },
+    ]
+  },
+  {
+    id: 'halls', icon: '🚶', name: 'Pasillos / Escaleras', short: 'Pasillos',
+    subareas: [
+      { id: 'floor_hall', name: 'Piso', checks: ['Sin basura','Sin polvo','Sin derrames','Brillo uniforme'] },
+      { id: 'stairs', name: 'Escaleras', checks: ['Escalones limpios','Pasamanos sin polvo/huellas','Sin manchas en paredes'] },
+      { id: 'walls_hall', name: 'Paredes y esquinas', checks: ['Sin suciedad en zócalos','Sin telarañas','Sin marcas'] },
+      { id: 'bins_hall', name: 'Papeleros / Cestos', checks: ['Limpios exterior','Bolsa en buen estado','Sin desbordamiento'] },
+    ]
+  },
+  {
+    id: 'offices', icon: '🖥️', name: 'Oficinas / Cubículos', short: 'Oficinas',
+    subareas: [
+      { id: 'desk', name: 'Escritorios y superficies', checks: ['Sin polvo','Sin manchas','Ordenados (lo que aplica)'] },
+      { id: 'floor_off', name: 'Piso bajo escritorios', checks: ['Sin cables con polvo acumulado','Sin basura','Aspirado'] },
+      { id: 'partitions', name: 'Divisiones / Mamparas', checks: ['Sin polvo en bordes','Sin manchas','Sin pegatinas sucias'] },
+      { id: 'equip', name: 'Equipos (exterior)', checks: ['Monitor sin polvo','Teclado visible limpio','Teléfono sin suciedad'] },
+      { id: 'trash_off', name: 'Papeleros individuales', checks: ['Vaciados','Con bolsa','Sin olor'] },
+    ]
+  },
+  {
+    id: 'meeting', icon: '🪑', name: 'Salas de Reunión', short: 'Salas',
+    subareas: [
+      { id: 'table_mt', name: 'Mesa de reunión', checks: ['Sin manchas','Sin polvo','Sin residuos de comida'] },
+      { id: 'chairs_mt', name: 'Sillas', checks: ['Sin polvo en respaldo','Sin manchas en asiento','Sin residuos'] },
+      { id: 'equip_mt', name: 'Equipo audiovisual', checks: ['Pantalla / proyector sin polvo','Control sin suciedad'] },
+      { id: 'floor_mt', name: 'Piso', checks: ['Limpio','Sin cables con polvo','Alfombra sin manchas (si aplica)'] },
+      { id: 'glass_mt', name: 'Vidrios / Puertas de vidrio', checks: ['Sin huellas','Sin manchas','Marco limpio'] },
+    ]
+  },
+  {
+    id: 'bathrooms', icon: '🚻', name: 'Servicios Sanitarios', short: 'Baños',
+    subareas: [
+      { id: 'wc', name: 'Inodoros / Pocetas', checks: ['Interior sin sarro/manchas','Asiento limpio','Exterior sin suciedad','Sin mal olor'] },
+      { id: 'sink', name: 'Lavamanos / Grifería', checks: ['Porcelana limpia','Grifería sin cal','Sin manchas de jabón','Sin suciedad en desagüe'] },
+      { id: 'floor_bath', name: 'Piso y drenajes', checks: ['Sin humedad acumulada','Sin residuos','Desagüe libre y limpio'] },
+      { id: 'mirror', name: 'Espejos', checks: ['Sin manchas','Sin salpicaduras','Limpio y brillante'] },
+      { id: 'supplies', name: 'Suministros', checks: ['Papel higiénico abastecido','Jabón disponible','Toallas/secador funcionando','Papelero con bolsa'] },
+      { id: 'walls_bath', name: 'Paredes y azulejos', checks: ['Sin manchas','Sin moho visible','Limpieza en juntas'] },
+    ]
+  },
+  {
+    id: 'cafeteria', icon: '☕', name: 'Cafetería / Comedor', short: 'Cafetería',
+    subareas: [
+      { id: 'tables_caf', name: 'Mesas y sillas', checks: ['Mesas sin residuos','Sin migajas','Sillas sin manchas'] },
+      { id: 'counter_caf', name: 'Mostrador / Área de servicio', checks: ['Sin residuos de comida','Sin manchas de líquidos','Ordenado'] },
+      { id: 'floor_caf', name: 'Piso', checks: ['Sin migajas','Sin manchas','Sin líquidos derramados'] },
+      { id: 'microwave', name: 'Microondas / Electrodomésticos', checks: ['Interior sin residuos','Exterior limpio','Sin olor'] },
+      { id: 'sink_caf', name: 'Fregadero / Área de lavado', checks: ['Limpio','Sin acumulación','Sin suciedad en desagüe'] },
+      { id: 'trash_caf', name: 'Cestos de basura', checks: ['Con bolsa','Sin desbordamiento','Sin olor excesivo','Exterior limpio'] },
+    ]
+  },
+  {
+    id: 'kitchen', icon: '🍳', name: 'Cocina (si aplica)', short: 'Cocina',
+    subareas: [
+      { id: 'surfaces_k', name: 'Mesones y superficies', checks: ['Desinfectados','Sin residuos','Sin manchas de grasa'] },
+      { id: 'equip_k', name: 'Equipos de cocina', checks: ['Exterior limpio','Sin grasa acumulada','Manijas limpias'] },
+      { id: 'floor_k', name: 'Piso', checks: ['Sin grasa','Sin residuos','Drenaje libre'] },
+      { id: 'wall_k', name: 'Paredes / Azulejos', checks: ['Sin salpicaduras','Sin grasa','Sin moho'] },
+    ]
+  },
+  {
+    id: 'cleanroom', icon: '🧫', name: 'Área Limpia (Cleanroom)', short: 'Cleanroom',
+    subareas: [
+      { id: 'entry_cr', name: 'Antesala / Área de cambio', checks: ['Sin polvo en bancas','Locker exterior limpio','Piso sin suciedad'] },
+      { id: 'floor_cr', name: 'Piso del cleanroom', checks: ['Libre de partículas visibles','Sin marcas','Sin residuos'] },
+      { id: 'walls_cr', name: 'Paredes y techo', checks: ['Sin polvo en superficies','Sin manchas','Sellados sin suciedad'] },
+      { id: 'equipment_cr', name: 'Equipos y mesas de trabajo', checks: ['Sin polvo','Sin residuos de proceso','Desinfectados si aplica'] },
+      { id: 'pass_cr', name: 'Pasaventanas / Exclusas', checks: ['Libres de suciedad','Sellados correctamente','Sin residuos acumulados'] },
+      { id: 'protocol_cr', name: 'Protocolos de limpieza', checks: ['Bitácora al día','Materiales aprobados en uso','Equipos de limpieza limpios y marcados'] },
+    ]
+  },
+  {
+    id: 'service', icon: '🧹', name: 'Cuartos de Servicio / Limpieza', short: 'Servicio',
+    subareas: [
+      { id: 'mop_room', name: 'Cuarto de implementos', checks: ['Ordenado','Implementos colgados','Sin mal olor','Piso limpio'] },
+      { id: 'chem', name: 'Químicos / Insumos', checks: ['Identificados con etiqueta','Almacenados correctamente','Sin derrames'] },
+      { id: 'equip_serv', name: 'Máquinas (si aplica)', checks: ['Limpias','Sin residuos de uso','Guardadas correctamente'] },
+    ]
+  },
+  {
+    id: 'exterior', icon: '🅿️', name: 'Exteriores / Estacionamiento', short: 'Exteriores',
+    subareas: [
+      { id: 'entrance', name: 'Entrada principal', checks: ['Sin basura','Piso limpio','Señalización limpia'] },
+      { id: 'parking', name: 'Estacionamiento', checks: ['Sin residuos','Señalización visible','Cestos de basura en buen estado'] },
+      { id: 'green', name: 'Áreas verdes / Jardines', checks: ['Sin basura','Cestos limpios','Aceras limpias'] },
+    ]
+  },
+  {
+    id: 'storage', icon: '📦', name: 'Bodegas / Almacenamiento', short: 'Bodega',
+    subareas: [
+      { id: 'floor_stor', name: 'Piso', checks: ['Sin polvo','Sin basura','Sin derrames'] },
+      { id: 'shelves', name: 'Estantes / Racks', checks: ['Sin polvo','Organizados','Sin suciedad acumulada'] },
+      { id: 'pest', name: 'Control de plagas', checks: ['Sin evidencia de plagas','Trampas en lugar','Sin restos de plaga'] },
+    ]
+  },
+  {
+    id: 'elevators', icon: '🛗', name: 'Elevadores / Ascensores', short: 'Elevadores',
+    subareas: [
+      { id: 'cabin', name: 'Cabina interior', checks: ['Piso sin suciedad','Paredes sin huellas','Espejos limpios','Panel de botones limpio'] },
+      { id: 'doors_elev', name: 'Puertas (interior y exterior)', checks: ['Sin huellas','Sin manchas','Sin residuos en rieles'] },
+      { id: 'ceiling_elev', name: 'Techo / Iluminación', checks: ['Sin telarañas','Sin polvo acumulado','Luminaria limpia'] },
+    ]
+  },
+];
+
+// ════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════
+let state = {
+  building: '', floor: '', auditor: '', date: '', type: '',
+  selectedAreas: [],
+  currentAreaIdx: 0,
+  areas: {} // { areaId: { score, comment, subareas: { subId: { score, comment, tasks:[] } } } }
+};
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+const DEFAULT_PROJECTS = ['ADVANT','Bayer Metro','CBRE DXC','JLL LSEG','CBRE UBER','WP','McKinsey','WPlaces'];
+
+function getProjects() {
+  try {
+    const saved = localStorage.getItem('auditpro_projects');
+    return saved ? JSON.parse(saved) : [...DEFAULT_PROJECTS];
+  } catch(e) { return [...DEFAULT_PROJECTS]; }
+}
+
+function saveProjects(list) {
+  localStorage.setItem('auditpro_projects', JSON.stringify(list));
+}
+
+function renderProjectManager() {
+  const list = getProjects();
+  const dl = document.getElementById('building-list');
+  dl.innerHTML = list.map(p => `<option value="${p}">`).join('');
+  const pm = document.getElementById('project-list');
+  if (!pm) return;
+  pm.innerHTML = list.map((p, i) => `
+    <div style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;">
+      <span style="font-size:13px">${p}</span>
+      <button onclick="removeProject(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;line-height:1" title="Eliminar">✕</button>
+    </div>`).join('');
+}
+
+function toggleProjectManager() {
+  const pm = document.getElementById('project-manager');
+  pm.style.display = pm.style.display === 'none' ? 'block' : 'none';
+  renderProjectManager();
+}
+
+function addProject() {
+  const inp = document.getElementById('new-project-inp');
+  const name = inp.value.trim();
+  if (!name) return;
+  const list = getProjects();
+  if (list.includes(name)) { showToast('⚠️ Ese proyecto ya existe', 'warning'); return; }
+  list.push(name);
+  saveProjects(list);
+  inp.value = '';
+  renderProjectManager();
+  showToast('✅ Proyecto agregado: ' + name);
+}
+
+function removeProject(idx) {
+  const list = getProjects();
+  const name = list[idx];
+  if (!confirm(`¿Eliminar "${name}" de la lista?`)) return;
+  list.splice(idx, 1);
+  saveProjects(list);
+  renderProjectManager();
+  showToast('🗑️ Eliminado: ' + name);
+}
+
+function init() {
+  // Set today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inp-date').value = today;
+
+  // Load projects into datalist
+  renderProjectManager();
+
+  // Render area selector
+  const container = document.getElementById('areas-selector');
+  AREA_DEFS.forEach(area => {
+    const div = document.createElement('div');
+    div.className = 'area-check selected';
+    div.dataset.id = area.id;
+    div.innerHTML = `<input type="checkbox" checked> <span class="chk">✓</span> <span class="ach-icon">${area.icon}</span> <span class="ach-name">${area.name}</span>`;
+    div.onclick = () => toggleArea(div, area.id);
+    container.appendChild(div);
+  });
+}
+
+function toggleArea(el, id) {
+  el.classList.toggle('selected');
+  el.querySelector('.chk').textContent = el.classList.contains('selected') ? '✓' : '';
+}
+
+// ════════════════════════════════════════════════════
+//  START AUDIT
+// ════════════════════════════════════════════════════
+function startAudit() {
+  const building = document.getElementById('inp-building').value.trim();
+  const floor = document.getElementById('inp-floor').value.trim();
+  const auditor = document.getElementById('inp-auditor').value.trim();
+  const date = document.getElementById('inp-date').value;
+
+  if (!building) { showToast('⚠️ Ingresa el nombre del edificio', 'warning'); return; }
+
+  const selected = [...document.querySelectorAll('.area-check.selected')].map(el => el.dataset.id);
+  if (selected.length === 0) { showToast('⚠️ Selecciona al menos un área', 'warning'); return; }
+
+  state = {
+    building, floor, auditor, date,
+    type: document.getElementById('inp-type').value,
+    selectedAreas: selected,
+    currentAreaIdx: 0,
+    areas: {}
+  };
+
+  // Init area data
+  selected.forEach(id => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    state.areas[id] = { score: 0, comment: '', subareas: {} };
+    def.subareas.forEach(sub => {
+      state.areas[id].subareas[sub.id] = { score: 0, comment: '', tasks: [] };
+    });
+  });
+
+  // Update header
+  document.getElementById('hdr-building').textContent = `— ${building}${floor ? ' · ' + floor : ''}`;
+  document.getElementById('hdr-date').textContent = formatDate(date);
+
+  document.getElementById('screen-setup').style.display = 'none';
+  document.getElementById('screen-audit').style.display = 'block';
+  document.getElementById('sidebar').classList.add('visible');
+
+  renderSidebar();
+  renderArea();
+}
+
+// ════════════════════════════════════════════════════
+//  SIDEBAR
+// ════════════════════════════════════════════════════
+function renderSidebar() {
+  const sb = document.getElementById('sidebar');
+  const total = state.selectedAreas.length;
+  const done = state.selectedAreas.filter(id => state.areas[id].score > 0).length;
+
+  document.getElementById('hdr-progress').textContent = `${done} de ${total} áreas revisadas`;
+
+  sb.innerHTML = `<div class="sidebar-label">Áreas (${done}/${total})</div>`;
+  state.selectedAreas.forEach((id, idx) => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    const areaData = state.areas[id];
+    const sc = areaData.score;
+    const isCurrent = idx === state.currentAreaIdx;
+    const isDone = sc > 0;
+
+    const div = document.createElement('div');
+    div.className = `sidebar-item ${isCurrent ? 'active' : ''} ${isDone && !isCurrent ? 'done' : ''}`;
+    div.innerHTML = `
+      <span class="area-icon">${def.icon}</span>
+      <span>${def.short}</span>
+      ${sc > 0 ? `<span class="sidebar-score-pill pill-${sc}">${sc}</span>` : ''}
+    `;
+    div.onclick = () => { state.currentAreaIdx = idx; renderArea(); renderSidebar(); };
+    sb.appendChild(div);
+  });
+
+  // Progress
+  const pct = Math.round((done / total) * 100);
+  sb.innerHTML += `
+    <div style="padding:16px 16px 0">
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-text">${pct}% completado</div>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════
+//  RENDER AREA
+// ════════════════════════════════════════════════════
+function renderArea() {
+  const id = state.selectedAreas[state.currentAreaIdx];
+  const def = AREA_DEFS.find(a => a.id === id);
+  const areaData = state.areas[id];
+  const total = state.selectedAreas.length;
+  const isLast = state.currentAreaIdx === total - 1;
+
+  // Header
+  document.getElementById('area-header').innerHTML = `
+    <div class="area-icon-big">${def.icon}</div>
+    <div>
+      <div class="area-name">${def.name}</div>
+      <div class="area-subname">Área ${state.currentAreaIdx + 1} de ${total} · ${state.building}${state.floor ? ' · ' + state.floor : ''}</div>
+    </div>
+  `;
+
+  // Nav pills
+  const pills = document.getElementById('nav-pills-top');
+  pills.innerHTML = state.selectedAreas.map((aid, idx) => {
+    const d = AREA_DEFS.find(a => a.id === aid);
+    const sc = state.areas[aid].score;
+    return `<div class="nav-pill ${idx === state.currentAreaIdx ? 'active-pill' : sc > 0 ? 'done-pill' : ''}"
+      onclick="state.currentAreaIdx=${idx};renderArea();renderSidebar();">${d.icon} ${d.short}</div>`;
+  }).join('');
+
+  // Content
+  const content = document.getElementById('area-content');
+  content.innerHTML = '';
+
+  // Overall area score
+  content.innerHTML += `
+    <div class="subarea-card" style="border-color:var(--accent); background:rgba(244,167,42,0.04)">
+      <div class="subarea-top" style="cursor:default">
+        <span style="font-size:18px">⭐</span>
+        <span class="subarea-title" style="font-family:'Syne',sans-serif;font-weight:700">Nota Global del Área</span>
+        ${areaData.score > 0 ? `<span class="sidebar-score-pill pill-${areaData.score}" style="font-size:14px;padding:4px 12px">${areaData.score}</span>` : ''}
+      </div>
+      <div class="subarea-body">
+        <div class="score-label">CALIFICACIÓN</div>
+        ${renderScoreBtns('area', id, areaData.score)}
+        <div class="form-label" style="margin-top:10px">Comentario general</div>
+        <textarea class="form-input" rows="2" placeholder="Observación general del área..."
+          onchange="state.areas['${id}'].comment=this.value">${areaData.comment}</textarea>
+      </div>
+    </div>
+  `;
+
+  // Subareas
+  def.subareas.forEach(sub => {
+    const subData = areaData.subareas[sub.id];
+    content.innerHTML += `
+      <div class="subarea-card" id="card-${sub.id}">
+        <div class="subarea-top">
+          <span style="font-size:15px">📌</span>
+          <span class="subarea-title">${sub.name}</span>
+          ${subData.score > 0 ? `<span class="sidebar-score-pill pill-${subData.score}">${subData.score}</span>` : `<span style="color:var(--muted);font-size:11px">Sin calificar</span>`}
+          <span style="color:var(--muted);font-size:18px;margin-left:4px">›</span>
+        </div>
+        <div class="subarea-body" id="body-${sub.id}" style="display:none">
+          <div class="score-label">¿CÓMO ESTÁ?</div>
+          ${renderScoreBtns('sub', sub.id, subData.score, id)}
+          <div class="form-label" style="margin-top:10px">Puntos a revisar</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+            ${sub.checks.map(c => `<span style="background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--muted)">✓ ${c}</span>`).join('')}
+          </div>
+          <div class="form-label">Notas / Observaciones</div>
+          <textarea class="form-input" rows="2" placeholder="¿Qué encontraste específicamente?"
+            onchange="state.areas['${id}'].subareas['${sub.id}'].comment=this.value">${subData.comment}</textarea>
+          <div class="divider"></div>
+          <div class="tasks-header">
+            <div class="form-label" style="margin:0">⚠️ TAREAS / HALLAZGOS A RESOLVER</div>
+          </div>
+          <div class="task-list" id="tasks-${sub.id}">
+            ${renderTasks(subData.tasks, id, sub.id)}
+          </div>
+          <div class="task-add-row" style="margin-top:10px">
+            <input class="form-input" id="new-task-${sub.id}" placeholder="Describe el hallazgo o tarea..." onkeypress="if(event.key==='Enter')addTask('${id}','${sub.id}')">
+            <select class="form-input" id="task-pri-${sub.id}" style="width:120px">
+              <option value="normal">Normal</option>
+              <option value="urgente">🔴 Urgente</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="addTask('${id}','${sub.id}')">+ Agregar</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  // Toggle subareas
+  document.querySelectorAll('.subarea-top').forEach(top => {
+    if (top.style.cursor === 'default') return;
+    top.onclick = () => {
+      const subId = top.parentElement.id.replace('card-', '');
+      const body = document.getElementById('body-' + subId);
+      if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+    };
+  });
+
+  // Show/hide buttons
+  document.getElementById('btn-prev').style.display = state.currentAreaIdx === 0 ? 'none' : '';
+  document.getElementById('btn-next').style.display = isLast ? 'none' : '';
+  document.getElementById('btn-finish').style.display = isLast ? '' : 'none';
+
+  // Scroll top
+  window.scrollTo(0, 0);
+}
+
+function renderScoreBtns(type, targetId, current, parentId) {
+  const labels = ['', 'Pésimo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+  return `<div class="score-btns">${[1,2,3,4,5].map(v => `
+    <div class="score-btn ${current === v ? 'active' : ''}" data-v="${v}"
+      onclick="setScore('${type}','${targetId}',${v},'${parentId||''}')">
+      <div class="snum">${v}</div>
+      <div class="slabel">${labels[v]}</div>
+    </div>`).join('')}</div>`;
+}
+
+function setScore(type, targetId, val, parentId) {
+  if (type === 'area') {
+    state.areas[targetId].score = val;
+  } else {
+    state.areas[parentId].subareas[targetId].score = val;
+  }
+  renderArea();
+  renderSidebar();
+  autoSave();
+}
+
+function renderTasks(tasks, areaId, subId) {
+  if (!tasks || tasks.length === 0) {
+    return `<div class="empty-state" style="padding:12px;font-size:12px"><div>Sin hallazgos registrados aún</div></div>`;
+  }
+  return tasks.map((t, i) => `
+    <div class="task-item ${t.priority}">
+      <span class="task-priority ${t.priority}">${t.priority === 'urgente' ? '🔴 Urgente' : '🔵 Normal'}</span>
+      <span class="task-text">${t.text}</span>
+      <button class="btn-del" onclick="removeTask('${areaId}','${subId}',${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function addTask(areaId, subId) {
+  const inp = document.getElementById(`new-task-${subId}`);
+  const pri = document.getElementById(`task-pri-${subId}`);
+  const text = inp.value.trim();
+  if (!text) return;
+  state.areas[areaId].subareas[subId].tasks.push({ text, priority: pri.value });
+  inp.value = '';
+  document.getElementById(`tasks-${subId}`).innerHTML = renderTasks(state.areas[areaId].subareas[subId].tasks, areaId, subId);
+  autoSave();
+  showToast('✅ Tarea agregada');
+}
+
+function removeTask(areaId, subId, idx) {
+  state.areas[areaId].subareas[subId].tasks.splice(idx, 1);
+  document.getElementById(`tasks-${subId}`).innerHTML = renderTasks(state.areas[areaId].subareas[subId].tasks, areaId, subId);
+  autoSave();
+}
+
+// ════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════
+function navigate(dir) {
+  state.currentAreaIdx += dir;
+  renderArea();
+  renderSidebar();
+}
+
+// ════════════════════════════════════════════════════
+//  SUMMARY
+// ════════════════════════════════════════════════════
+function showSummary() {
+  document.getElementById('screen-audit').style.display = 'none';
+  document.getElementById('screen-summary').style.display = 'block';
+  window.scrollTo(0, 0);
+
+  // Meta
+  document.getElementById('summary-meta').innerHTML =
+    `📍 ${state.building} ${state.floor ? '· ' + state.floor : ''} &nbsp;|&nbsp; 📅 ${formatDate(state.date)} &nbsp;|&nbsp; 👤 ${state.auditor} &nbsp;|&nbsp; 📋 ${state.type}`;
+
+  // Scores
+  const scores = state.selectedAreas.map(id => state.areas[id].score).filter(s => s > 0);
+  const avg = scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : '—';
+  const avgNum = parseFloat(avg);
+
+  // Overall
+  const scoreLabel = avgNum >= 4.5 ? '🌟 Excelente' : avgNum >= 3.5 ? '👍 Bueno' : avgNum >= 2.5 ? '⚠️ Regular' : avgNum >= 1.5 ? '❌ Malo' : '🚨 Crítico';
+  const scoreClass = avgNum >= 4.5 ? 'score-5' : avgNum >= 3.5 ? 'score-4' : avgNum >= 2.5 ? 'score-3' : avgNum >= 1.5 ? 'score-2' : 'score-1';
+  document.getElementById('overall-score-box').innerHTML = `
+    <div class="os-num" style="color:var(--${scoreClass})">${avg}</div>
+    <div class="os-info">
+      <div class="os-title">${scoreLabel}</div>
+      <div class="os-sub">Promedio de ${scores.length} área(s) calificada(s) de ${state.selectedAreas.length} revisadas</div>
+      <div style="margin-top:10px">
+        <div class="progress-bar" style="height:8px;width:280px"><div class="progress-fill" style="width:${(avgNum/5)*100}%"></div></div>
+      </div>
+    </div>
+  `;
+
+  // Score cards
+  const grid = document.getElementById('score-cards');
+  grid.innerHTML = state.selectedAreas.map(id => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    const sc = state.areas[id].score;
+    const lbl = sc === 5 ? 'Excelente' : sc === 4 ? 'Bueno' : sc === 3 ? 'Regular' : sc === 2 ? 'Malo' : sc === 1 ? 'Pésimo' : 'Sin calificar';
+    return `<div class="score-card">
+      <div class="sc-icon">${def.icon}</div>
+      <div class="sc-name">${def.name}</div>
+      <div class="sc-score" style="color:var(--${sc > 0 ? 'score-' + sc : 'muted'})">${sc || '—'}</div>
+      <div class="sc-label">${lbl}</div>
+    </div>`;
+  }).join('');
+
+  // Tasks summary
+  const tasksSec = document.getElementById('tasks-summary');
+  const allTasks = [];
+  state.selectedAreas.forEach(id => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    const areaData = state.areas[id];
+    Object.keys(areaData.subareas).forEach(subId => {
+      const sub = areaData.subareas[subId];
+      const subDef = def.subareas.find(s => s.id === subId);
+      sub.tasks.forEach(t => {
+        allTasks.push({ area: def.name, subarea: subDef?.name || '', ...t });
+      });
+    });
+  });
+
+  if (allTasks.length === 0) {
+    tasksSec.innerHTML = `<div class="tasks-summary-title">✅ Tareas / Hallazgos</div><div class="empty-state"><div class="ei">🎉</div><div>Sin hallazgos registrados</div></div>`;
+  } else {
+    const urgent = allTasks.filter(t => t.priority === 'urgente');
+    const normal = allTasks.filter(t => t.priority !== 'urgente');
+    tasksSec.innerHTML = `<div class="tasks-summary-title">⚠️ Tareas / Hallazgos (${allTasks.length})</div>`;
+    if (urgent.length) {
+      tasksSec.innerHTML += `<div class="task-group">
+        <div class="task-group-name">🔴 URGENTES (${urgent.length})</div>
+        ${urgent.map(t => `<div class="task-item urgent" style="margin-bottom:6px">
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">${t.area} › ${t.subarea}</div><div class="task-text">${t.text}</div></div>
+        </div>`).join('')}
+      </div>`;
+    }
+    if (normal.length) {
+      tasksSec.innerHTML += `<div class="task-group">
+        <div class="task-group-name">🔵 NORMALES (${normal.length})</div>
+        ${normal.map(t => `<div class="task-item normal" style="margin-bottom:6px">
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">${t.area} › ${t.subarea}</div><div class="task-text">${t.text}</div></div>
+        </div>`).join('')}
+      </div>`;
+    }
+  }
+
+  // Save to history
+  saveToHistory();
+}
+
+// ════════════════════════════════════════════════════
+//  EXPORT
+// ════════════════════════════════════════════════════
+function exportText() {
+  const lines = [];
+  lines.push('═══════════════════════════════════════');
+  lines.push('       INFORME DE AUDITORÍA');
+  lines.push('═══════════════════════════════════════');
+  lines.push(`Edificio: ${state.building}${state.floor ? ' - ' + state.floor : ''}`);
+  lines.push(`Fecha: ${formatDate(state.date)}`);
+  lines.push(`Auditor: ${state.auditor}`);
+  lines.push(`Tipo: ${state.type}`);
+  lines.push('');
+
+  const scores = state.selectedAreas.map(id => state.areas[id].score).filter(s => s > 0);
+  const avg = scores.length ? (scores.reduce((a,b) => a+b, 0) / scores.length).toFixed(1) : '—';
+  lines.push(`NOTA PROMEDIO: ${avg} / 5`);
+  lines.push('');
+  lines.push('─── CALIFICACIONES POR ÁREA ───');
+
+  state.selectedAreas.forEach(id => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    const areaData = state.areas[id];
+    const lbl = ['','Pésimo','Malo','Regular','Bueno','Excelente'][areaData.score] || 'Sin calificar';
+    lines.push(`${def.icon} ${def.name}: ${areaData.score || '—'}/5 (${lbl})`);
+    if (areaData.comment) lines.push(`   → ${areaData.comment}`);
+  });
+
+  lines.push('');
+  lines.push('─── HALLAZGOS Y TAREAS ───');
+
+  let hasTasks = false;
+  state.selectedAreas.forEach(id => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    const areaData = state.areas[id];
+    let areaHeader = false;
+    def.subareas.forEach(sub => {
+      const subData = areaData.subareas[sub.id];
+      if (subData.tasks.length > 0) {
+        hasTasks = true;
+        if (!areaHeader) { lines.push(`\n${def.icon} ${def.name}`); areaHeader = true; }
+        lines.push(`  • ${sub.name}:`);
+        subData.tasks.forEach(t => {
+          lines.push(`    [${t.priority.toUpperCase()}] ${t.text}`);
+        });
+      }
+    });
+  });
+
+  if (!hasTasks) lines.push('Sin hallazgos registrados.');
+
+  lines.push('');
+  lines.push('─────────────────────────────────────');
+  lines.push(`Generado: ${new Date().toLocaleString('es-CR')}`);
+
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    showToast('📋 Informe copiado al portapapeles');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = lines.join('\n');
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Informe copiado');
+  });
+}
+
+// ════════════════════════════════════════════════════
+//  STORAGE
+// ════════════════════════════════════════════════════
+function autoSave() {
+  try {
+    const saves = JSON.parse(localStorage.getItem('auditpro_saves') || '[]');
+    const id = `${state.building}_${state.date}`.replace(/\s/g, '_');
+    const idx = saves.findIndex(s => s.id === id);
+    const entry = { id, ts: Date.now(), state: JSON.parse(JSON.stringify(state)) };
+    if (idx >= 0) saves[idx] = entry; else saves.unshift(entry);
+    localStorage.setItem('auditpro_saves', JSON.stringify(saves.slice(0, 30)));
+  } catch(e) {}
+}
+
+function saveToHistory() { autoSave(); }
+
+function loadHistory() {
+  const sec = document.getElementById('history-section');
+  sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+  const list = document.getElementById('history-list');
+  try {
+    const saves = JSON.parse(localStorage.getItem('auditpro_saves') || '[]');
+    if (saves.length === 0) { list.innerHTML = '<div class="empty-state"><div class="ei">📂</div><div>Sin auditorías guardadas</div></div>'; return; }
+    list.innerHTML = saves.map((s, i) => {
+      const scores = s.state.selectedAreas.map(id => s.state.areas[id].score).filter(sc => sc > 0);
+      const avg = scores.length ? (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1) : '—';
+      return `<div class="task-item" style="margin-bottom:8px">
+        <div style="flex:1">
+          <div style="font-weight:500">${s.state.building} ${s.state.floor ? '· ' + s.state.floor : ''}</div>
+          <div style="font-size:11px;color:var(--muted)">${formatDate(s.state.date)} · ${s.state.auditor} · ${s.state.type}</div>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent);margin-right:12px">${avg}</div>
+        <button class="btn btn-outline btn-xs" onclick="restoreAudit(${i})">Ver</button>
+        <button class="btn btn-xs" style="background:rgba(239,68,68,0.2);color:var(--danger);border:none;border-radius:6px;cursor:pointer;margin-left:6px" onclick="deleteHistory(${i})">✕</button>
+      </div>`;
+    }).join('');
+  } catch(e) { list.innerHTML = '<div style="color:var(--muted)">Error al cargar historial.</div>'; }
+}
+
+function restoreAudit(idx) {
+  try {
+    const saves = JSON.parse(localStorage.getItem('auditpro_saves') || '[]');
+    state = saves[idx].state;
+    document.getElementById('hdr-building').textContent = `— ${state.building}${state.floor ? ' · ' + state.floor : ''}`;
+    document.getElementById('hdr-date').textContent = formatDate(state.date);
+    document.getElementById('screen-summary').style.display = 'none';
+    document.getElementById('screen-setup').style.display = 'none';
+    document.getElementById('screen-audit').style.display = 'block';
+    document.getElementById('sidebar').classList.add('visible');
+    state.currentAreaIdx = 0;
+    renderSidebar();
+    renderArea();
+    showToast('📂 Auditoría restaurada');
+  } catch(e) { showToast('Error al restaurar'); }
+}
+
+function deleteHistory(idx) {
+  try {
+    const saves = JSON.parse(localStorage.getItem('auditpro_saves') || '[]');
+    saves.splice(idx, 1);
+    localStorage.setItem('auditpro_saves', JSON.stringify(saves));
+    loadHistory();
+    showToast('🗑️ Eliminado');
+  } catch(e) {}
+}
+
+function newAudit() {
+  if (!confirm('¿Iniciar una nueva auditoría? Se perderá la sesión actual (ya está guardada en historial).')) return;
+  state = {};
+  document.getElementById('screen-summary').style.display = 'none';
+  document.getElementById('screen-audit').style.display = 'none';
+  document.getElementById('screen-setup').style.display = 'block';
+  document.getElementById('sidebar').classList.remove('visible');
+  document.getElementById('hdr-building').textContent = '— Nueva Auditoría';
+}
+
+// ════════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════════
+function formatDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'warning' ? 'var(--score-3)' : 'var(--success)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
