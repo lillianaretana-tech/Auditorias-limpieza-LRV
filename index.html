@@ -272,13 +272,14 @@
     padding-top: 14px;
   }
   .score-btns { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .score-btns { flex-wrap: wrap; }
   .score-btn {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
-    width: 62px;
-    padding: 10px 6px;
+    gap: 2px;
+    width: 52px;
+    padding: 8px 4px;
     border-radius: 10px;
     border: 2px solid var(--border);
     background: var(--surface2);
@@ -287,18 +288,17 @@
     font-family: 'Syne', sans-serif;
   }
   .score-btn:hover { transform: translateY(-2px); }
-  .score-btn .snum { font-size: 20px; font-weight: 800; }
-  .score-btn .slabel { font-size: 8px; color: var(--muted); text-align: center; letter-spacing: 0.3px; line-height: 1.2; }
-  .score-btn[data-v="1"] .snum { color: var(--score-1); }
-  .score-btn[data-v="2"] .snum { color: var(--score-2); }
-  .score-btn[data-v="3"] .snum { color: var(--score-3); }
-  .score-btn[data-v="4"] .snum { color: var(--score-4); }
-  .score-btn[data-v="5"] .snum { color: var(--score-5); }
-  .score-btn.active[data-v="1"] { border-color: var(--score-1); background: rgba(239,68,68,0.12); }
-  .score-btn.active[data-v="2"] { border-color: var(--score-2); background: rgba(249,115,22,0.12); }
-  .score-btn.active[data-v="3"] { border-color: var(--score-3); background: rgba(234,179,8,0.12); }
-  .score-btn.active[data-v="4"] { border-color: var(--score-4); background: rgba(132,204,22,0.12); }
-  .score-btn.active[data-v="5"] { border-color: var(--score-5); background: rgba(34,197,94,0.12); }
+  .score-btn .snum { font-size: 15px; font-weight: 800; }
+  .score-btn .slabel { font-size: 7px; color: var(--muted); text-align: center; letter-spacing: 0.3px; line-height: 1.2; }
+  /* colors by range handled via JS scoreColorClass */
+  .score-btn.c1 .snum { color: var(--score-1); } .score-btn.active.c1 { border-color: var(--score-1); background: rgba(239,68,68,0.12); }
+  .score-btn.c2 .snum { color: var(--score-2); } .score-btn.active.c2 { border-color: var(--score-2); background: rgba(249,115,22,0.12); }
+  .score-btn.c3 .snum { color: var(--score-3); } .score-btn.active.c3 { border-color: var(--score-3); background: rgba(234,179,8,0.12); }
+  .score-btn.c4 .snum { color: var(--score-4); } .score-btn.active.c4 { border-color: var(--score-4); background: rgba(132,204,22,0.12); }
+  .score-btn.c5 .snum { color: var(--score-5); } .score-btn.active.c5 { border-color: var(--score-5); background: rgba(34,197,94,0.12); }
+  /* validation warning on subarea */
+  .subarea-card.needs-justification { border-color: var(--score-3) !important; }
+  .justification-warning { font-size: 11px; color: var(--score-3); padding: 6px 10px; background: rgba(234,179,8,0.08); border-radius: 6px; margin-top: 8px; display:none; }
 
   /* ── COMMENT & TASKS ── */
   textarea.form-input { resize: vertical; min-height: 72px; }
@@ -927,7 +927,7 @@ function renderSidebar() {
     div.innerHTML = `
       <span class="area-icon">${def.icon}</span>
       <span>${def.short}</span>
-      ${sc > 0 ? `<span class="sidebar-score-pill pill-${sc}">${sc}</span>` : ''}
+      ${sc > 0 ? `<span class="sidebar-score-pill ${pillClass(sc)}">${fmtScore(sc)}</span>` : ''}
     `;
     div.onclick = () => { state.currentAreaIdx = idx; renderArea(); renderSidebar(); };
     sb.appendChild(div);
@@ -981,7 +981,7 @@ function renderArea() {
       <div class="subarea-top" style="cursor:default">
         <span style="font-size:18px">⭐</span>
         <span class="subarea-title" style="font-family:'Syne',sans-serif;font-weight:700">Nota Global del Área</span>
-        <span id="area-score-pill" class="sidebar-score-pill pill-${areaData.score}" style="font-size:14px;padding:4px 12px;${areaData.score > 0 ? '' : 'display:none'}">${areaData.score || ''}</span>
+        <span id="area-score-pill" class="sidebar-score-pill ${pillClass(areaData.score)}" style="font-size:14px;padding:4px 12px;${areaData.score > 0 ? '' : 'display:none'}">${areaData.score > 0 ? fmtScore(areaData.score) : ''}</span>
       </div>
       <div class="subarea-body">
         <div class="score-label">CALIFICACIÓN</div>
@@ -1001,10 +1001,11 @@ function renderArea() {
         <div class="subarea-top">
           <span style="font-size:15px">📌</span>
           <span class="subarea-title">${sub.name}</span>
-          <span id="sub-pill-${sub.id}" class="sidebar-score-pill ${subData.score > 0 ? 'pill-'+subData.score : 'pill-0'}" style="${subData.score === 0 ? 'color:var(--muted);font-size:11px' : ''}">${subData.score > 0 ? subData.score : 'Sin calificar'}</span>
+          <span id="sub-pill-${sub.id}" class="sidebar-score-pill ${subData.score > 0 ? pillClass(subData.score) : 'pill-0'}" style="${subData.score === 0 ? 'color:var(--muted);font-size:11px' : ''}">${subData.score > 0 ? fmtScore(subData.score) : 'Sin calificar'}</span>
           <span style="color:var(--muted);font-size:18px;margin-left:4px">›</span>
         </div>
         <div class="subarea-body" id="body-${sub.id}" style="display:none">
+          <div class="justification-warning"></div>
           <div class="score-label">¿CÓMO ESTÁ?</div>
           ${renderScoreBtns('sub', sub.id, subData.score, id)}
           <div class="form-label" style="margin-top:10px">Puntos a revisar</div>
@@ -1013,7 +1014,7 @@ function renderArea() {
           </div>
           <div class="form-label">Notas / Observaciones</div>
           <textarea class="form-input" rows="2" placeholder="¿Qué encontraste específicamente?"
-            onchange="state.areas['${id}'].subareas['${sub.id}'].comment=this.value">${subData.comment}</textarea>
+            onchange="state.areas['${id}'].subareas['${sub.id}'].comment=this.value; clearWarning('${sub.id}');">${subData.comment}</textarea>
           <div class="divider"></div>
           <div class="tasks-header">
             <div class="form-label" style="margin:0">⚠️ TAREAS / HALLAZGOS A RESOLVER</div>
@@ -1053,22 +1054,50 @@ function renderArea() {
   window.scrollTo(0, 0);
 }
 
+const SCORE_VALUES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+const SCORE_LABELS = {1:'Pésimo', 1.5:'', 2:'Malo', 2.5:'', 3:'Regular', 3.5:'', 4:'Bueno', 4.5:'', 5:'Excelente'};
+
+function scoreColorClass(v) {
+  if (v >= 5) return 'c5';
+  if (v >= 4) return 'c4';
+  if (v >= 3) return 'c3';
+  if (v >= 2) return 'c2';
+  return 'c1';
+}
+
+function pillClass(v) {
+  if (!v || v === 0) return 'pill-0';
+  if (v >= 5) return 'pill-5';
+  if (v >= 4) return 'pill-4';
+  if (v >= 3) return 'pill-3';
+  if (v >= 2) return 'pill-2';
+  return 'pill-1';
+}
+
+function fmtScore(v) {
+  return v % 1 === 0 ? v.toString() : v.toFixed(1);
+}
+
 function renderScoreBtns(type, targetId, current, parentId) {
-  const labels = ['', 'Pésimo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
   const containerId = type === 'area' ? 'area-score-btns' : `score-btns-${targetId}`;
-  return `<div class="score-btns" id="${containerId}">${[1,2,3,4,5].map(v => `
-    <div class="score-btn ${current === v ? 'active' : ''}" data-v="${v}"
+  return `<div class="score-btns" id="${containerId}">${SCORE_VALUES.map(v => {
+    const cc = scoreColorClass(v);
+    const isActive = current === v;
+    return `<div class="score-btn ${cc} ${isActive ? 'active' : ''}" data-v="${v}"
       onclick="setScore('${type}','${targetId}',${v},'${parentId||''}')">
-      <div class="snum">${v}</div>
-      <div class="slabel">${labels[v]}</div>
-    </div>`).join('')}</div>`;
+      <div class="snum">${fmtScore(v)}</div>
+      <div class="slabel">${SCORE_LABELS[v]}</div>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 function calcAreaAvg(areaId) {
   const subScores = Object.values(state.areas[areaId].subareas)
     .map(s => s.score).filter(s => s > 0);
   if (!subScores.length) return 0;
-  return Math.round(subScores.reduce((a,b) => a+b, 0) / subScores.length);
+  const raw = subScores.reduce((a,b) => a+b, 0) / subScores.length;
+  // Round to nearest 0.5
+  return Math.round(raw * 2) / 2;
 }
 
 function setScore(type, targetId, val, parentId) {
@@ -1076,27 +1105,27 @@ function setScore(type, targetId, val, parentId) {
     state.areas[targetId].score = val;
     // Update area score pill in header card
     const pill = document.getElementById('area-score-pill');
-    if (pill) { pill.className = `sidebar-score-pill pill-${val}`; pill.style.fontSize='14px'; pill.style.padding='4px 12px'; pill.textContent = val; }
+    if (pill) { pill.className = `sidebar-score-pill ${pillClass(val)}`; pill.style.fontSize='14px'; pill.style.padding='4px 12px'; pill.textContent = fmtScore(val); }
     // Update all score buttons in area card
     document.querySelectorAll(`#area-score-btns .score-btn`).forEach(btn => {
-      btn.classList.toggle('active', parseInt(btn.dataset.v) === val);
+      btn.classList.toggle('active', parseFloat(btn.dataset.v) === val);
     });
   } else {
     state.areas[parentId].subareas[targetId].score = val;
     // Update subarea pill
     const pill = document.getElementById('sub-pill-' + targetId);
-    if (pill) { pill.className = `sidebar-score-pill pill-${val}`; pill.textContent = val; }
+    if (pill) { pill.className = `sidebar-score-pill ${pillClass(val)}`; pill.textContent = fmtScore(val); }
     // Update score buttons in this subarea
     document.querySelectorAll(`#score-btns-${targetId} .score-btn`).forEach(btn => {
-      btn.classList.toggle('active', parseInt(btn.dataset.v) === val);
+      btn.classList.toggle('active', parseFloat(btn.dataset.v) === val);
     });
     // Auto-update area score from subarea average
     const avg = calcAreaAvg(parentId);
     state.areas[parentId].score = avg;
     const areaPill = document.getElementById('area-score-pill');
-    if (areaPill && avg > 0) { areaPill.className = `sidebar-score-pill pill-${avg}`; areaPill.style.fontSize='14px'; areaPill.style.padding='4px 12px'; areaPill.textContent = avg; }
+    if (areaPill && avg > 0) { areaPill.className = `sidebar-score-pill ${pillClass(avg)}`; areaPill.style.fontSize='14px'; areaPill.style.padding='4px 12px'; areaPill.textContent = fmtScore(avg); }
     const areaBtns = document.querySelectorAll(`#area-score-btns .score-btn`);
-    areaBtns.forEach(btn => btn.classList.toggle('active', parseInt(btn.dataset.v) === avg));
+    areaBtns.forEach(btn => btn.classList.toggle('active', parseFloat(btn.dataset.v) === avg));
   }
   renderSidebar();
   autoSave();
@@ -1123,6 +1152,7 @@ function addTask(areaId, subId) {
   state.areas[areaId].subareas[subId].tasks.push({ text, priority: pri.value });
   inp.value = '';
   document.getElementById(`tasks-${subId}`).innerHTML = renderTasks(state.areas[areaId].subareas[subId].tasks, areaId, subId);
+  clearWarning(subId);
   autoSave();
   showToast('✅ Tarea agregada');
 }
@@ -1136,7 +1166,68 @@ function removeTask(areaId, subId, idx) {
 // ════════════════════════════════════════════════════
 //  NAVIGATION
 // ════════════════════════════════════════════════════
+function validateCurrentArea() {
+  const id = state.selectedAreas[state.currentAreaIdx];
+  const def = AREA_DEFS.find(a => a.id === id);
+  const areaData = state.areas[id];
+  const missing = [];
+  def.subareas.forEach(sub => {
+    const sd = areaData.subareas[sub.id];
+    if (sd.score > 0 && sd.score < 5) {
+      const hasJustification = sd.comment.trim().length > 0 || sd.tasks.length > 0;
+      if (!hasJustification) missing.push(sub.name);
+    }
+  });
+  return missing;
+}
+
+function highlightMissing(missing, def) {
+  def.subareas.forEach(sub => {
+    const card = document.getElementById('card-' + sub.id);
+    if (!card) return;
+    card.classList.remove('needs-justification');
+    const warn = card.querySelector('.justification-warning');
+    if (warn) warn.style.display = 'none';
+  });
+  missing.forEach(name => {
+    const sub = def.subareas.find(s => s.name === name);
+    if (!sub) return;
+    const card = document.getElementById('card-' + sub.id);
+    if (!card) return;
+    card.classList.add('needs-justification');
+    // Open the body
+    const body = document.getElementById('body-' + sub.id);
+    if (body) body.style.display = 'block';
+    let warn = card.querySelector('.justification-warning');
+    if (!warn) {
+      warn = document.createElement('div');
+      warn.className = 'justification-warning';
+      card.querySelector('.subarea-body').prepend(warn);
+    }
+    warn.style.display = 'block';
+    warn.textContent = '⚠️ Calificación menor a 5 — agregá un comentario u hallazgo para justificar.';
+  });
+}
+
+function clearWarning(subId) {
+  const card = document.getElementById('card-' + subId);
+  if (!card) return;
+  card.classList.remove('needs-justification');
+  const warn = card.querySelector('.justification-warning');
+  if (warn) warn.style.display = 'none';
+}
+
 function navigate(dir) {
+  if (dir > 0) {
+    const missing = validateCurrentArea();
+    if (missing.length > 0) {
+      const id = state.selectedAreas[state.currentAreaIdx];
+      const def = AREA_DEFS.find(a => a.id === id);
+      highlightMissing(missing, def);
+      showToast(`⚠️ Falta justificar ${missing.length} subárea(s) con nota < 5`, 'warning');
+      return;
+    }
+  }
   state.currentAreaIdx += dir;
   renderArea();
   renderSidebar();
@@ -1146,6 +1237,30 @@ function navigate(dir) {
 //  SUMMARY
 // ════════════════════════════════════════════════════
 function showSummary() {
+  // Validate all areas before showing summary
+  const allMissing = [];
+  state.selectedAreas.forEach((id, idx) => {
+    const def = AREA_DEFS.find(a => a.id === id);
+    const areaData = state.areas[id];
+    def.subareas.forEach(sub => {
+      const sd = areaData.subareas[sub.id];
+      if (sd.score > 0 && sd.score < 5) {
+        const ok = sd.comment.trim().length > 0 || sd.tasks.length > 0;
+        if (!ok) allMissing.push(`${def.short} › ${sub.name}`);
+      }
+    });
+  });
+  if (allMissing.length > 0) {
+    alert('⚠️ Antes de cerrar la auditoría, justificá las siguientes subáreas con nota menor a 5:\n\n' + allMissing.map(m => '• ' + m).join('\n') + '\n\nAgregá un comentario o un hallazgo en cada una.');
+    // Go to first area with issue
+    const firstIssue = allMissing[0].split(' › ')[0].trim();
+    const idx = state.selectedAreas.findIndex(id => {
+      const def = AREA_DEFS.find(a => a.id === id);
+      return def.short === firstIssue;
+    });
+    if (idx >= 0) { state.currentAreaIdx = idx; renderArea(); renderSidebar(); }
+    return;
+  }
   document.getElementById('screen-audit').style.display = 'none';
   document.getElementById('screen-summary').style.display = 'block';
   window.scrollTo(0, 0);
@@ -1164,7 +1279,7 @@ function showSummary() {
 
   // Overall
   const scoreLabel = avgNum >= 4.5 ? '🌟 Excelente' : avgNum >= 3.5 ? '👍 Bueno' : avgNum >= 2.5 ? '⚠️ Regular' : avgNum >= 1.5 ? '❌ Malo' : '🚨 Crítico';
-  const scoreClass = avgNum >= 4.5 ? 'score-5' : avgNum >= 3.5 ? 'score-4' : avgNum >= 2.5 ? 'score-3' : avgNum >= 1.5 ? 'score-2' : 'score-1';
+  const scoreClass = scoreColorClass(avgNum).replace('c','score-');
   document.getElementById('overall-score-box').innerHTML = `
     <div class="os-num" style="color:var(--${scoreClass})">${avg}</div>
     <div class="os-info">
@@ -1181,11 +1296,12 @@ function showSummary() {
   grid.innerHTML = state.selectedAreas.map(id => {
     const def = AREA_DEFS.find(a => a.id === id);
     const sc = state.areas[id].score;
-    const lbl = sc === 5 ? 'Excelente' : sc === 4 ? 'Bueno' : sc === 3 ? 'Regular' : sc === 2 ? 'Malo' : sc === 1 ? 'Pésimo' : 'Sin calificar';
+    const lbl = sc >= 5 ? 'Excelente' : sc >= 4 ? 'Bueno' : sc >= 3 ? 'Regular' : sc >= 2 ? 'Malo' : sc > 0 ? 'Pésimo' : 'Sin calificar';
+    const scColor = sc > 0 ? scoreColorClass(sc).replace('c','score-') : 'muted';
     return `<div class="score-card">
       <div class="sc-icon">${def.icon}</div>
       <div class="sc-name">${def.name}</div>
-      <div class="sc-score" style="color:var(--${sc > 0 ? 'score-' + sc : 'muted'})">${sc || '—'}</div>
+      <div class="sc-score" style="color:var(--${scColor})">${sc > 0 ? fmtScore(sc) : '—'}</div>
       <div class="sc-label">${lbl}</div>
     </div>`;
   }).join('');
