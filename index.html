@@ -661,6 +661,7 @@ const AREA_DEFS = [
       { id: 'partitions', name: 'Divisiones / Mamparas', checks: ['Sin polvo en bordes','Sin manchas','Sin pegatinas sucias'] },
       { id: 'equip', name: 'Equipos (exterior)', checks: ['Monitor sin polvo','Teclado visible limpio','Teléfono sin suciedad'] },
       { id: 'trash_off', name: 'Papeleros individuales', checks: ['Vaciados','Con bolsa','Sin olor'] },
+      { id: 'carpet_off', name: 'Alfombras', checks: ['Sin manchas visibles','Sin residuos ni migajas','Bordes y esquinas limpios','Sin olor','Libre de pelusas y pelos'] },
     ]
   },
   {
@@ -671,6 +672,7 @@ const AREA_DEFS = [
       { id: 'equip_mt', name: 'Equipo audiovisual', checks: ['Pantalla / proyector sin polvo','Control sin suciedad'] },
       { id: 'floor_mt', name: 'Piso', checks: ['Limpio','Sin cables con polvo','Alfombra sin manchas (si aplica)'] },
       { id: 'glass_mt', name: 'Vidrios / Puertas de vidrio', checks: ['Sin huellas','Sin manchas','Marco limpio'] },
+      { id: 'carpet_mt', name: 'Alfombras', checks: ['Sin manchas visibles','Sin residuos ni migajas','Bordes y esquinas limpios','Sin olor','Libre de pelusas y pelos'] },
     ]
   },
   {
@@ -737,6 +739,19 @@ const AREA_DEFS = [
       { id: 'floor_stor', name: 'Piso', checks: ['Sin polvo','Sin basura','Sin derrames'] },
       { id: 'shelves', name: 'Estantes / Racks', checks: ['Sin polvo','Organizados','Sin suciedad acumulada'] },
       { id: 'pest', name: 'Control de plagas', checks: ['Sin evidencia de plagas','Trampas en lugar','Sin restos de plaga'] },
+      { id: 'chem_stor', name: 'Almacenamiento de Químicos (Spartan)', checks: [
+        'Todos los productos etiquetados correctamente',
+        'Etiqueta legible y en español',
+        'Ficha de seguridad (SDS) disponible',
+        'Corrosivos separados de otros productos',
+        'Ácidos NO mezclados con alcalinos',
+        'Desengrasantes en área independiente',
+        'Productos en envases originales o debidamente rotulados',
+        'Sin derrames en estantes',
+        'Área ventilada',
+        'Sin productos vencidos o sin identificar',
+        'Equipos de protección (guantes, lentes) disponibles cerca'
+      ] },
     ]
   },
   {
