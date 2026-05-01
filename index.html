@@ -510,12 +510,311 @@
 </head>
 <body>
 
+
+<style>
+  /* ── AUTH OVERLAY ── */
+  #auth-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .auth-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    width: 340px;
+    max-width: 92vw;
+    text-align: center;
+  }
+  .auth-logo {
+    font-size: 48px;
+    cursor: pointer;
+    display: inline-block;
+    user-select: none;
+    margin-bottom: 8px;
+    transition: transform 0.1s;
+  }
+  .auth-logo:active { transform: scale(0.85); }
+  .auth-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800;
+    color: var(--accent); margin-bottom: 4px;
+  }
+  .auth-sub { font-size: 11px; color: var(--muted); margin-bottom: 28px; }
+  .auth-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; letter-spacing: 5px; text-align: center;
+    outline: none; margin-bottom: 14px;
+    transition: border-color 0.2s;
+  }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-input.shake { animation: authShake 0.4s; border-color: var(--danger) !important; }
+  @keyframes authShake {
+    0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+  }
+  .auth-btn {
+    width: 100%; padding: 13px;
+    background: var(--accent); border: none; border-radius: 10px;
+    color: #000; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .auth-btn:hover { background: #f5b94a; }
+  .auth-btn:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed; }
+  .auth-error { color: var(--danger); font-size: 12px; margin-top: 10px; min-height: 16px; }
+  .auth-lockout {
+    background: rgba(239,68,68,0.1); border: 1px solid var(--danger);
+    border-radius: 8px; padding: 10px; font-size: 12px; color: var(--score-1);
+    margin-top: 10px; display: none;
+  }
+  .lockout-bar { height: 4px; background: var(--danger); border-radius: 2px; margin-top: 8px; transition: width 1s linear; }
+  .demo-bubble {
+    margin-top: 18px;
+    background: rgba(59,130,246,0.12);
+    border: 1px solid var(--accent2);
+    border-radius: 10px; padding: 14px 16px;
+    display: none; animation: fadeIn 0.3s;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+  .demo-bubble .db-label { font-size: 9px; color: var(--accent2); font-family: 'DM Mono',monospace; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .demo-bubble .db-code { font-family: 'Syne',sans-serif; font-size: 30px; font-weight: 800; color: var(--accent2); letter-spacing: 8px; }
+  .demo-bubble .db-hint { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .tap-dots { display: flex; gap: 5px; justify-content: center; margin-top: 14px; }
+  .tap-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.15s; }
+  .tap-dot.lit { background: var(--accent); }
+  /* ── SET KEY MODAL ── */
+  #setkey-modal {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+  }
+  #setkey-modal.open { display: flex; }
+  .setkey-box {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 16px; padding: 28px 26px;
+    width: 340px; max-width: 92vw; text-align: center;
+  }
+  .setkey-title { font-family: 'Syne',sans-serif; font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .setkey-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.4; }
+  .setkey-error { color: var(--danger); font-size: 11px; margin-top: 8px; min-height: 16px; }
+  /* ── DEMO BADGE ── */
+  .demo-badge {
+    display: none;
+    background: var(--accent2); color: #fff;
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 1px; padding: 3px 8px; border-radius: 6px;
+    text-transform: uppercase;
+  }
+  /* ── LOCK BUTTON in header ── */
+  #btn-lock-session {
+    display: none;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); font-size: 16px; padding: 5px 10px;
+    border-radius: 7px; cursor: pointer; transition: all 0.15s;
+  }
+  #btn-lock-session:hover { border-color: var(--danger); color: var(--danger); }
+</style>
+
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo" id="auth-logo" onclick="handleLogoTap()">📋</div>
+    <div class="auth-title">AuditPro</div>
+    <div class="auth-sub">SBM Corp · Auditorías de Limpieza &amp; Mantenimiento</div>
+    <input class="auth-input" id="auth-input" type="password"
+      placeholder="••••" maxlength="30"
+      onkeypress="if(event.key==='Enter')tryLogin()">
+    <button class="auth-btn" id="auth-btn" onclick="tryLogin()">Ingresar →</button>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-lockout" id="auth-lockout">
+      🔒 Acceso bloqueado — demasiados intentos
+      <div class="lockout-bar" id="lockout-bar" style="width:100%"></div>
+    </div>
+    <div class="demo-bubble" id="demo-bubble">
+      <div class="db-label">🔵 Clave del día</div>
+      <div class="db-code" id="demo-code-display"></div>
+      <div class="db-hint">Válida solo hoy · Desaparece en <span id="demo-timer">8</span>s</div>
+    </div>
+    <div class="tap-dots" id="tap-dots">
+      <div class="tap-dot"></div><div class="tap-dot"></div>
+      <div class="tap-dot"></div><div class="tap-dot"></div>
+      <div class="tap-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SET PERSONAL KEY MODAL -->
+<div id="setkey-modal">
+  <div class="setkey-box">
+    <div style="font-size:32px;margin-bottom:10px">🔑</div>
+    <div class="setkey-title">Crear tu clave personal</div>
+    <div class="setkey-sub">Entraste con la clave del día. Ahora podés crear tu propia clave para acceder directamente la próxima vez.</div>
+    <input class="form-input" id="setkey-inp1" type="password" placeholder="Nueva clave (mín. 4 caracteres)" maxlength="30" onkeypress="if(event.key==='Enter')document.getElementById('setkey-inp2').focus()">
+    <input class="form-input" id="setkey-inp2" type="password" placeholder="Repetí la clave" maxlength="30" style="margin-top:8px" onkeypress="if(event.key==='Enter')savePersonalKey()">
+    <div class="setkey-error" id="setkey-error"></div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-outline" style="flex:1" onclick="dismissSetKey()">Ahora no</button>
+      <button class="btn btn-primary" style="flex:1" onclick="savePersonalKey()">Guardar clave</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  AUTH SYSTEM
+// ════════════════════════════════════════════════════
+function getDemoKey() {
+  const d = new Date();
+  const day = d.getDate(), month = d.getMonth() + 1, yr = d.getFullYear() % 100;
+  return String((day * 13 + month * 7 + yr * 3) % 9000 + 1000);
+}
+
+function getPersonalKey() {
+  return localStorage.getItem('auditpro_personal_key') || null;
+}
+
+let tapCount = 0, tapTimer = null, demoHideTimer = null, demoCountdown = null;
+let loginAttempts = 0, lockoutInterval = null;
+
+function handleLogoTap() {
+  tapCount++;
+  document.querySelectorAll('.tap-dot').forEach((d,i) => d.classList.toggle('lit', i < tapCount));
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => {
+    tapCount = 0;
+    document.querySelectorAll('.tap-dot').forEach(d => d.classList.remove('lit'));
+  }, 2000);
+  if (tapCount >= 5) {
+    tapCount = 0;
+    document.querySelectorAll('.tap-dot').forEach(d => d.classList.remove('lit'));
+    showDemoKey();
+  }
+}
+
+function showDemoKey() {
+  clearTimeout(demoHideTimer); clearInterval(demoCountdown);
+  const bubble = document.getElementById('demo-bubble');
+  const timerEl = document.getElementById('demo-timer');
+  document.getElementById('demo-code-display').textContent = getDemoKey();
+  bubble.style.display = 'block';
+  let secs = 8;
+  timerEl.textContent = secs;
+  demoCountdown = setInterval(() => {
+    secs--;
+    timerEl.textContent = secs;
+    if (secs <= 0) { clearInterval(demoCountdown); bubble.style.display = 'none'; }
+  }, 1000);
+}
+
+function tryLogin() {
+  if (lockoutInterval) return;
+  const val = document.getElementById('auth-input').value.trim();
+  const err = document.getElementById('auth-error');
+  const inp = document.getElementById('auth-input');
+  if (!val) { err.textContent = 'Ingresá tu clave.'; return; }
+
+  const personalKey = getPersonalKey();
+  const isDemo = val === getDemoKey();
+  const isPersonal = personalKey && val === personalKey;
+
+  if (isDemo || isPersonal) {
+    loginAttempts = 0;
+    sessionStorage.setItem('auditpro_auth', '1');
+    document.getElementById('auth-overlay').style.display = 'none';
+    document.getElementById('btn-lock-session').style.display = '';
+    err.textContent = '';
+    if (isDemo) {
+      document.getElementById('demo-badge').style.display = 'inline-block';
+      // Show set-key modal if no personal key yet
+      if (!personalKey) {
+        setTimeout(() => document.getElementById('setkey-modal').classList.add('open'), 600);
+      }
+    }
+  } else {
+    loginAttempts++;
+    inp.classList.add('shake');
+    setTimeout(() => inp.classList.remove('shake'), 500);
+    inp.value = '';
+    if (loginAttempts >= 3) startLockout();
+    else err.textContent = `Clave incorrecta. Intento ${loginAttempts} de 3.`;
+  }
+}
+
+function startLockout() {
+  const lockEl = document.getElementById('auth-lockout');
+  const bar = document.getElementById('lockout-bar');
+  const btn = document.getElementById('auth-btn');
+  const inp = document.getElementById('auth-input');
+  const err = document.getElementById('auth-error');
+  const SECS = 30;
+  err.textContent = '';
+  lockEl.style.display = 'block'; btn.disabled = true; inp.disabled = true;
+  bar.style.width = '100%';
+  let rem = SECS;
+  lockEl.childNodes[0].textContent = `🔒 Bloqueado por ${rem}s — demasiados intentos`;
+  lockoutInterval = setInterval(() => {
+    rem--;
+    bar.style.width = (rem / SECS * 100) + '%';
+    lockEl.childNodes[0].textContent = `🔒 Bloqueado por ${rem}s — demasiados intentos`;
+    if (rem <= 0) {
+      clearInterval(lockoutInterval); lockoutInterval = null;
+      loginAttempts = 0;
+      lockEl.style.display = 'none'; btn.disabled = false; inp.disabled = false;
+    }
+  }, 1000);
+}
+
+function savePersonalKey() {
+  const k1 = document.getElementById('setkey-inp1').value.trim();
+  const k2 = document.getElementById('setkey-inp2').value.trim();
+  const err = document.getElementById('setkey-error');
+  if (k1.length < 4) { err.textContent = 'Mínimo 4 caracteres.'; return; }
+  const obvious = ['1234','0000','1111','2222','3333','4444','5555','6666','7777','8888','9999','abcd','password'];
+  if (obvious.includes(k1.toLowerCase())) { err.textContent = 'Clave demasiado simple. Elegí otra.'; return; }
+  if (k1 !== k2) { err.textContent = 'Las claves no coinciden.'; return; }
+  localStorage.setItem('auditpro_personal_key', k1);
+  document.getElementById('setkey-modal').classList.remove('open');
+  document.getElementById('demo-badge').style.display = 'none';
+  showToast('🔑 Clave personal guardada correctamente');
+}
+
+function dismissSetKey() {
+  document.getElementById('setkey-modal').classList.remove('open');
+}
+
+function lockSession() {
+  sessionStorage.removeItem('auditpro_auth');
+  document.getElementById('auth-input').value = '';
+  document.getElementById('auth-error').textContent = '';
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('btn-lock-session').style.display = 'none';
+  document.getElementById('demo-badge').style.display = 'none';
+}
+
+// Persist session while browser is open
+if (sessionStorage.getItem('auditpro_auth') === '1') {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('btn-lock-session').style.display = '';
+}
+</script>
+
 <header>
   <div class="logo">
     📋 AuditPro <span id="hdr-building">— Nueva Auditoría</span>
+    <span class="demo-badge" id="demo-badge">DEMO</span>
   </div>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:10px">
     <button id="btn-back-setup" onclick="backToSetup()" style="display:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:6px 14px;border-radius:7px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">← Menú</button>
+    <button id="btn-lock-session" onclick="lockSession()" title="Bloquear sesión">🔒</button>
+    <span class="demo-badge" id="demo-badge">DEMO</span>
     <div class="header-meta">
       <div><strong id="hdr-date">—</strong></div>
       <div id="hdr-progress">0 de 0 áreas revisadas</div>
